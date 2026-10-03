@@ -329,25 +329,49 @@ function GalleryScene({
 		[speed]
 	);
 
-	// Touch drag state
+	// Touch drag state — horizontal swipe for mobile
 	const touchStartY = useRef<number | null>(null);
 	const touchLastY = useRef<number | null>(null);
+	const touchStartX = useRef<number | null>(null);
+	const touchLastX = useRef<number | null>(null);
 
 	const handleTouchStart = useCallback((e: TouchEvent) => {
 		touchStartY.current = e.touches[0].clientY;
 		touchLastY.current = e.touches[0].clientY;
+		touchStartX.current = e.touches[0].clientX;
+		touchLastX.current = e.touches[0].clientX;
 		setAutoPlay(false);
 		lastInteraction.current = Date.now();
 	}, []);
 
 	const handleTouchMove = useCallback(
 		(e: TouchEvent) => {
-			if (touchLastY.current === null) return;
-			const dy = touchLastY.current - e.touches[0].clientY;
-			touchLastY.current = e.touches[0].clientY;
-			setScrollVelocity((prev) => prev + dy * 0.03 * speed);
-			setAutoPlay(false);
-			lastInteraction.current = Date.now();
+			const isMobile = window.innerWidth < 768;
+			if (isMobile) {
+				// Horizontal swipe on mobile (prevents accidental gallery scroll during vertical page scrolling)
+				if (touchLastX.current === null || touchLastY.current === null) return;
+				const currentX = e.touches[0].clientX;
+				const currentY = e.touches[0].clientY;
+				const dx = touchLastX.current - currentX;
+				const dy = touchLastY.current - currentY;
+				touchLastX.current = currentX;
+				touchLastY.current = currentY;
+
+				// Only advance gallery if swipe is predominantly horizontal
+				if (Math.abs(dx) >= Math.abs(dy) * 0.8) {
+					setScrollVelocity((prev) => prev + dx * 0.035 * speed);
+					setAutoPlay(false);
+					lastInteraction.current = Date.now();
+				}
+			} else {
+				// Vertical swipe on desktop/tablet touchscreens
+				if (touchLastY.current === null) return;
+				const dy = touchLastY.current - e.touches[0].clientY;
+				touchLastY.current = e.touches[0].clientY;
+				setScrollVelocity((prev) => prev + dy * 0.03 * speed);
+				setAutoPlay(false);
+				lastInteraction.current = Date.now();
+			}
 		},
 		[speed]
 	);
@@ -355,15 +379,19 @@ function GalleryScene({
 	const handleTouchEnd = useCallback(() => {
 		touchStartY.current = null;
 		touchLastY.current = null;
+		touchStartX.current = null;
+		touchLastX.current = null;
 	}, []);
 
 	useEffect(() => {
 		const canvas = document.querySelector('canvas');
 		if (canvas) {
+			canvas.style.touchAction = 'pan-y';
 			canvas.addEventListener('wheel', handleWheel, { passive: false });
 			canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
 			canvas.addEventListener('touchmove', handleTouchMove, { passive: true });
 			canvas.addEventListener('touchend', handleTouchEnd, { passive: true });
+			canvas.addEventListener('touchcancel', handleTouchEnd, { passive: true });
 			document.addEventListener('keydown', handleKeyDown);
 
 			return () => {
@@ -371,6 +399,7 @@ function GalleryScene({
 				canvas.removeEventListener('touchstart', handleTouchStart);
 				canvas.removeEventListener('touchmove', handleTouchMove);
 				canvas.removeEventListener('touchend', handleTouchEnd);
+				canvas.removeEventListener('touchcancel', handleTouchEnd);
 				document.removeEventListener('keydown', handleKeyDown);
 			};
 		}

@@ -155,7 +155,7 @@ export const LimelightNav = ({
             {label && (
               <span
                 className={cn(
-                  "absolute -bottom-8 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-md text-[9px] sm:text-[10px] uppercase tracking-[0.16em] font-distancia text-amber-200/90 bg-zinc-950/95 border border-amber-400/25 shadow-[0_4px_16px_rgba(0,0,0,0.8)] pointer-events-none transition-all duration-200 whitespace-nowrap z-30",
+                  "hidden sm:block absolute -bottom-8 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-md text-[9px] sm:text-[10px] uppercase tracking-[0.16em] font-distancia text-amber-200/90 bg-zinc-950/95 border border-amber-400/25 shadow-[0_4px_16px_rgba(0,0,0,0.8)] pointer-events-none transition-all duration-200 whitespace-nowrap z-30",
                   hoveredIndex === index
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 -translate-y-1 pointer-events-none"
@@ -188,10 +188,10 @@ export const LimelightNav = ({
           className={cn(
             "absolute left-[-35%] top-[5px] w-[170%] [clip-path:polygon(6%_100%,26%_0,74%_0,94%_100%)] pointer-events-none transition-all duration-200 ease-out",
             isClicked
-              ? "h-20 bg-gradient-to-b from-primary/80 via-primary/30 to-transparent brightness-150"
+              ? "h-10 sm:h-20 bg-gradient-to-b from-primary/80 via-primary/30 to-transparent brightness-150"
               : hoveredIndex !== null
-              ? "h-16 bg-gradient-to-b from-primary/55 via-primary/20 to-transparent"
-              : "h-14 bg-gradient-to-b from-primary/35 via-primary/10 to-transparent"
+              ? "h-9 sm:h-16 bg-gradient-to-b from-primary/55 via-primary/20 to-transparent"
+              : "h-8 sm:h-14 bg-gradient-to-b from-primary/35 via-primary/10 to-transparent"
           )}
         />
       </div>

@@ -303,7 +303,7 @@ function GallerySection({ items }: { items: WorksWheelItem[] }) {
         <div className="text-center absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 pointer-events-none select-none z-10 w-[90vw] sm:w-auto">
           <div className="px-4 sm:px-5 py-2 rounded-full bg-zinc-950/80 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.8)] flex flex-col items-center gap-0.5">
             <p className="font-distancia text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-amber-200/90 font-medium">
-              <span className="sm:hidden">Swipe to explore · Touch to wave</span>
+              <span className="sm:hidden">Swipe left / right to explore</span>
               <span className="hidden sm:inline">Hover photo to wave · Scroll or Drag to explore</span>
             </p>
             <p className="font-distancia text-[8px] sm:text-[8.5px] uppercase tracking-[0.14em] text-white/40 font-light">
