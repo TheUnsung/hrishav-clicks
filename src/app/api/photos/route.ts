@@ -16,28 +16,42 @@ function getLocalPhotosData() {
   return { worksData: [], portfolioImages: [] };
 }
 
-function getBlobToken(): string | undefined {
-  if (process.env.BLOB_READ_WRITE_TOKEN) return process.env.BLOB_READ_WRITE_TOKEN;
-  if (process.env.VERCEL_BLOB_READ_WRITE_TOKEN) return process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
+function getBlobCredentials() {
+  const token =
+    process.env.BLOB_READ_WRITE_TOKEN ||
+    process.env.VERCEL_BLOB_READ_WRITE_TOKEN ||
+    Object.entries(process.env).find(
+      ([k, v]) =>
+        k.endsWith('_READ_WRITE_TOKEN') ||
+        (typeof v === 'string' && v.startsWith('vercel_blob_rw_'))
+    )?.[1];
 
-  for (const [key, value] of Object.entries(process.env)) {
-    if (typeof value === 'string' && (key.endsWith('_READ_WRITE_TOKEN') || value.startsWith('vercel_blob_rw_'))) {
-      if (value.startsWith('vercel_blob_rw_')) {
-        return value;
-      }
-    }
+  const storeId =
+    process.env.BLOB_STORE_ID ||
+    process.env.final_STORE_ID ||
+    Object.entries(process.env).find(([k]) => k.endsWith('_STORE_ID'))?.[1];
+
+  if (storeId && !process.env.BLOB_STORE_ID) {
+    process.env.BLOB_STORE_ID = storeId;
   }
-  return undefined;
+
+  const isConnected = Boolean(token || storeId || process.env.VERCEL_OIDC_TOKEN);
+
+  return { token, storeId, isConnected };
 }
 
 export async function GET() {
-  const blobToken = getBlobToken();
+  const { token, storeId, isConnected } = getBlobCredentials();
 
-  // 1. If Vercel Blob is configured, read the cloud version
-  if (blobToken) {
+  // 1. If Vercel Blob is configured (via Token or OIDC storeId), read the cloud version
+  if (isConnected) {
     try {
       const { list } = await import('@vercel/blob');
-      const { blobs } = await list({ prefix: 'data/photos.json', token: blobToken });
+      const { blobs } = await list({
+        prefix: 'data/photos.json',
+        ...(token ? { token } : {}),
+        ...(storeId ? { storeId } : {}),
+      });
       const photosBlob = blobs.find((b) => b.pathname === 'data/photos.json');
 
       if (photosBlob) {
@@ -59,17 +73,17 @@ export async function GET() {
   const data = getLocalPhotosData();
   return NextResponse.json({
     ...data,
-    cloudStorage: !!blobToken,
+    cloudStorage: isConnected,
   });
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const blobToken = getBlobToken();
+    const { token, storeId, isConnected } = getBlobCredentials();
 
-    // 1. If Vercel Blob is configured, persist to cloud
-    if (blobToken) {
+    // 1. If Vercel Blob is configured (Token or OIDC), persist to cloud
+    if (isConnected) {
       try {
         const { put } = await import('@vercel/blob');
 
@@ -79,7 +93,11 @@ export async function POST(request: Request) {
 
         try {
           const { list } = await import('@vercel/blob');
-          const { blobs } = await list({ prefix: 'data/photos.json', token: blobToken });
+          const { blobs } = await list({
+            prefix: 'data/photos.json',
+            ...(token ? { token } : {}),
+            ...(storeId ? { storeId } : {}),
+          });
           const photosBlob = blobs.find((b) => b.pathname === 'data/photos.json');
           if (photosBlob) {
             const res = await fetch(photosBlob.url, { cache: 'no-store' });
@@ -108,7 +126,8 @@ export async function POST(request: Request) {
           access: 'public',
           addRandomSuffix: false,
           allowOverwrite: true,
-          token: blobToken,
+          ...(token ? { token } : {}),
+          ...(storeId ? { storeId } : {}),
         });
 
         return NextResponse.json({

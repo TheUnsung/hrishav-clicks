@@ -3,23 +3,33 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-function getBlobToken(): string | undefined {
-  if (process.env.BLOB_READ_WRITE_TOKEN) return process.env.BLOB_READ_WRITE_TOKEN;
-  if (process.env.VERCEL_BLOB_READ_WRITE_TOKEN) return process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
+function getBlobCredentials() {
+  const token =
+    process.env.BLOB_READ_WRITE_TOKEN ||
+    process.env.VERCEL_BLOB_READ_WRITE_TOKEN ||
+    Object.entries(process.env).find(
+      ([k, v]) =>
+        k.endsWith('_READ_WRITE_TOKEN') ||
+        (typeof v === 'string' && v.startsWith('vercel_blob_rw_'))
+    )?.[1];
 
-  for (const [key, value] of Object.entries(process.env)) {
-    if (typeof value === 'string' && (key.endsWith('_READ_WRITE_TOKEN') || value.startsWith('vercel_blob_rw_'))) {
-      if (value.startsWith('vercel_blob_rw_')) {
-        return value;
-      }
-    }
+  const storeId =
+    process.env.BLOB_STORE_ID ||
+    process.env.final_STORE_ID ||
+    Object.entries(process.env).find(([k]) => k.endsWith('_STORE_ID'))?.[1];
+
+  if (storeId && !process.env.BLOB_STORE_ID) {
+    process.env.BLOB_STORE_ID = storeId;
   }
-  return undefined;
+
+  const isConnected = Boolean(token || storeId || process.env.VERCEL_OIDC_TOKEN);
+
+  return { token, storeId, isConnected };
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
   const contentType = request.headers.get('content-type') || '';
-  const blobToken = getBlobToken();
+  const { token, storeId, isConnected } = getBlobCredentials();
 
   // 1. Direct Client Upload Token Generation (bypasses the 4.5MB Vercel Serverless Function limit, supporting up to 500MB)
   if (contentType.includes('application/json')) {
@@ -29,7 +39,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       const jsonResponse = await handleUpload({
         body,
         request,
-        token: blobToken,
+        ...(token ? { token } : {}),
         onBeforeGenerateToken: async (pathname) => {
           return {
             allowedContentTypes: [
@@ -40,7 +50,7 @@ export async function POST(request: Request): Promise<NextResponse> {
               'image/avif',
             ],
             tokenPayload: JSON.stringify({ pathname }),
-            token: blobToken,
+            ...(token ? { token } : {}),
           };
         },
         onUploadCompleted: async () => {
@@ -70,14 +80,15 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    // Direct server-side upload if Vercel Blob token is available
-    if (blobToken) {
+    // Direct server-side upload if Vercel Blob is configured (Token or OIDC)
+    if (isConnected) {
       const { put } = await import('@vercel/blob');
       const timestamp = Date.now();
       const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const blob = await put(`photos/${timestamp}-${cleanName}`, file, {
         access: 'public',
-        token: blobToken,
+        ...(token ? { token } : {}),
+        ...(storeId ? { storeId } : {}),
       });
       return NextResponse.json({
         success: true,
