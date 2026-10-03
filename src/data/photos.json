@@ -1,0 +1,150 @@
+{
+  "worksData": [
+    {
+      "title": "Spotlight Stray",
+      "image": "/uploads/1790990733956-20261001_092532__1_.jpg",
+      "href": "#spotlight-stray"
+    },
+    {
+      "title": "Glow of the Late Shift",
+      "image": "/uploads/1790990699368-20260928_183828.jpg",
+      "href": "#Correnthum"
+    },
+    {
+      "title": "Looking Up Through Green",
+      "image": "/uploads/1790990676308-20260911_120656.jpg",
+      "href": "#looking-up-through-green"
+    },
+    {
+      "title": "Framed in Time",
+      "image": "/uploads/1790990641929-20260828_151614_0000.png",
+      "href": "#LodhiGarden"
+    },
+    {
+      "title": "The Morning Stroll",
+      "image": "/uploads/1790990616329-20260823_105505.jpg",
+      "href": "#the-morning-stroll"
+    },
+    {
+      "title": "Pure Elegance",
+      "image": "/uploads/1790990596211-20260823_105505__1_.jpg",
+      "href": "#pure-elegance"
+    },
+    {
+      "title": "Colours of Badri Vishal",
+      "image": "/uploads/1790990569493-20260602_142234__1_.jpg",
+      "href": "#Badrinath #JaiBadriVishal #CharDham #BadrinathTemple #TempleArchitecture #IncredibleIndia #Uttarakhand #SpiritualIndia"
+    },
+    {
+      "title": "Faith in Every Raindrop",
+      "image": "/uploads/1790990546175-20260601_132425.jpg",
+      "href": "#KedarnathTrek #MonsoonYatra #PilgrimTrail #RainyDays #ColorfulPonchos #CharDhamYatra #HimalayanTrails #FaithAndFog"
+    },
+    {
+      "title": "Trishul of the Himalayas",
+      "image": "/uploads/1790990523354-20260531_172943.jpg",
+      "href": "#Trishul #LordShiva #KedarnathDham #MahadevBhakti #HimalayanSky #SpiritualJourney #OmNamahShivaya #MountainViews"
+    },
+    {
+      "title": "Where Clouds Bow to Kedar",
+      "image": "/uploads/1790990487128-20260531_172117.jpg",
+      "href": "#Kedarnath #JaiShriKedar #CharDham #HarHarMahadev #KedarnathYatra #Uttarakhand #HimalayanPilgrimage #DevBhoomi"
+    },
+    {
+      "title": "The Quiet Observer",
+      "image": "/uploads/1790990452831-20260529_122221.jpg",
+      "href": "#MonkeyBusiness #WildlifePhotography #RhesusMacaque #HimalayanWildlife #NatureLovers #JungleVibes #AnimalPortraits"
+    },
+    {
+      "title": "Rush Hour Eclipse",
+      "image": "/uploads/1790990308042-20251102_171902.jpg",
+      "href": "#SunsetVibes #HazySunset #RedSun #CityDrive #TrafficSunset #IndianRoads #GoldenHour #StreetPhotography"
+    }
+  ],
+  "portfolioImages": [
+    {
+      "title": "Spotlight Stray",
+      "src": "/uploads/1790990733956-20261001_092532__1_.jpg",
+      "alt": "A peaceful stray cat basking under the morning golden light",
+      "category": "Street",
+      "aspect": "tall"
+    },
+    {
+      "title": "Glow of the Late Shift",
+      "src": "/uploads/1790990699368-20260928_183828.jpg",
+      "alt": "Correnthum — Corporate architecture glowing in the dusk twilight",
+      "category": "Architecture",
+      "aspect": "tall"
+    },
+    {
+      "title": "Looking Up Through Green",
+      "src": "/uploads/1790990676308-20260911_120656.jpg",
+      "alt": "Looking up through lush tree branches and emerald canopy",
+      "category": "Nature",
+      "aspect": "tall"
+    },
+    {
+      "title": "Framed in Time",
+      "src": "/uploads/1790990641929-20260828_151614_0000.png",
+      "alt": "Lodhi Garden — Ancient historic arches framed in timeless beauty",
+      "category": "Architecture",
+      "aspect": "tall"
+    },
+    {
+      "title": "The Morning Stroll",
+      "src": "/uploads/1790990616329-20260823_105505.jpg",
+      "alt": "Gentle morning stroll bathed in warm natural light",
+      "category": "Street",
+      "aspect": "tall"
+    },
+    {
+      "title": "Pure Elegance",
+      "src": "/uploads/1790990596211-20260823_105505__1_.jpg",
+      "alt": "Moments of quiet grace and natural elegance",
+      "category": "Portrait",
+      "aspect": "tall"
+    },
+    {
+      "title": "Colours of Badri Vishal",
+      "src": "/uploads/1790990569493-20260602_142234__1_.jpg",
+      "alt": "Badrinath Temple architecture in the Himalayas, Uttarakhand",
+      "category": "Himalayas",
+      "aspect": "wide"
+    },
+    {
+      "title": "Faith in Every Raindrop",
+      "src": "/uploads/1790990546175-20260601_132425.jpg",
+      "alt": "Kedarnath Trek monsoon pilgrimage trail through misty mountain passes",
+      "category": "Himalayas",
+      "aspect": "tall"
+    },
+    {
+      "title": "Trishul of the Himalayas",
+      "src": "/uploads/1790990523354-20260531_172943.jpg",
+      "alt": "Sacred Trishul standing tall against mountain skies at Kedarnath Dham",
+      "category": "Himalayas",
+      "aspect": "wide"
+    },
+    {
+      "title": "Where Clouds Bow to Kedar",
+      "src": "/uploads/1790990487128-20260531_172117.jpg",
+      "alt": "Majestic clouds rolling over the sacred Kedarnath mountain valley",
+      "category": "Himalayas",
+      "aspect": "wide"
+    },
+    {
+      "title": "The Quiet Observer",
+      "src": "/uploads/1790990452831-20260529_122221.jpg",
+      "alt": "Himalayan Rhesus Macaque observing peacefully from the wild",
+      "category": "Wildlife",
+      "aspect": "wide"
+    },
+    {
+      "title": "Rush Hour Eclipse",
+      "src": "/uploads/1790990308042-20251102_171902.jpg",
+      "alt": "Dramatic crimson sun setting over city evening highway traffic",
+      "category": "Urban",
+      "aspect": "tall"
+    }
+  ]
+}
