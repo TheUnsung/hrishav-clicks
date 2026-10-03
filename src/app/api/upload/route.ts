@@ -3,8 +3,23 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+function getBlobToken(): string | undefined {
+  if (process.env.BLOB_READ_WRITE_TOKEN) return process.env.BLOB_READ_WRITE_TOKEN;
+  if (process.env.VERCEL_BLOB_READ_WRITE_TOKEN) return process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
+
+  for (const [key, value] of Object.entries(process.env)) {
+    if (typeof value === 'string' && (key.endsWith('_READ_WRITE_TOKEN') || value.startsWith('vercel_blob_rw_'))) {
+      if (value.startsWith('vercel_blob_rw_')) {
+        return value;
+      }
+    }
+  }
+  return undefined;
+}
+
 export async function POST(request: Request): Promise<NextResponse> {
   const contentType = request.headers.get('content-type') || '';
+  const blobToken = getBlobToken();
 
   // 1. Direct Client Upload Token Generation (bypasses the 4.5MB Vercel Serverless Function limit, supporting up to 500MB)
   if (contentType.includes('application/json')) {
@@ -14,6 +29,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       const jsonResponse = await handleUpload({
         body,
         request,
+        token: blobToken,
         onBeforeGenerateToken: async (pathname) => {
           return {
             allowedContentTypes: [
@@ -24,6 +40,7 @@ export async function POST(request: Request): Promise<NextResponse> {
               'image/avif',
             ],
             tokenPayload: JSON.stringify({ pathname }),
+            token: blobToken,
           };
         },
         onUploadCompleted: async () => {
@@ -53,13 +70,14 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    // Direct server-side upload if Vercel Blob is configured
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
+    // Direct server-side upload if Vercel Blob token is available
+    if (blobToken) {
       const { put } = await import('@vercel/blob');
       const timestamp = Date.now();
       const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const blob = await put(`photos/${timestamp}-${cleanName}`, file, {
         access: 'public',
+        token: blobToken,
       });
       return NextResponse.json({
         success: true,

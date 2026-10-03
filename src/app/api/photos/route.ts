@@ -16,12 +16,28 @@ function getLocalPhotosData() {
   return { worksData: [], portfolioImages: [] };
 }
 
+function getBlobToken(): string | undefined {
+  if (process.env.BLOB_READ_WRITE_TOKEN) return process.env.BLOB_READ_WRITE_TOKEN;
+  if (process.env.VERCEL_BLOB_READ_WRITE_TOKEN) return process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
+
+  for (const [key, value] of Object.entries(process.env)) {
+    if (typeof value === 'string' && (key.endsWith('_READ_WRITE_TOKEN') || value.startsWith('vercel_blob_rw_'))) {
+      if (value.startsWith('vercel_blob_rw_')) {
+        return value;
+      }
+    }
+  }
+  return undefined;
+}
+
 export async function GET() {
+  const blobToken = getBlobToken();
+
   // 1. If Vercel Blob is configured, read the cloud version
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
+  if (blobToken) {
     try {
       const { list } = await import('@vercel/blob');
-      const { blobs } = await list({ prefix: 'data/photos.json' });
+      const { blobs } = await list({ prefix: 'data/photos.json', token: blobToken });
       const photosBlob = blobs.find((b) => b.pathname === 'data/photos.json');
 
       if (photosBlob) {
@@ -43,16 +59,17 @@ export async function GET() {
   const data = getLocalPhotosData();
   return NextResponse.json({
     ...data,
-    cloudStorage: !!process.env.BLOB_READ_WRITE_TOKEN,
+    cloudStorage: !!blobToken,
   });
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const blobToken = getBlobToken();
 
     // 1. If Vercel Blob is configured, persist to cloud
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
+    if (blobToken) {
       try {
         const { put } = await import('@vercel/blob');
 
@@ -62,7 +79,7 @@ export async function POST(request: Request) {
 
         try {
           const { list } = await import('@vercel/blob');
-          const { blobs } = await list({ prefix: 'data/photos.json' });
+          const { blobs } = await list({ prefix: 'data/photos.json', token: blobToken });
           const photosBlob = blobs.find((b) => b.pathname === 'data/photos.json');
           if (photosBlob) {
             const res = await fetch(photosBlob.url, { cache: 'no-store' });
@@ -91,6 +108,7 @@ export async function POST(request: Request) {
           access: 'public',
           addRandomSuffix: false,
           allowOverwrite: true,
+          token: blobToken,
         });
 
         return NextResponse.json({
