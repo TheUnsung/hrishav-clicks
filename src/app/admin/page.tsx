@@ -124,7 +124,7 @@ export default function AdminPage() {
     }, 4000);
   };
 
-  // Upload file helper
+  // Upload file helper (supports direct client upload for large camera files up to 50MB+)
   const uploadImageFile = async (
     file: File,
     target: 'wheel' | 'portfolio'
@@ -138,21 +138,48 @@ export default function AdminPage() {
     else setIsUploadingPort(true);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      let uploadedUrl = '';
 
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      // 1. Direct client upload to Vercel Blob (bypasses the 4.5MB Vercel serverless limit!)
+      if (cloudStorage) {
+        try {
+          const { upload } = await import('@vercel/blob/client');
+          const timestamp = Date.now();
+          const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+          const newBlob = await upload(`photos/${timestamp}-${cleanName}`, file, {
+            access: 'public',
+            handleUploadUrl: '/api/upload',
+          });
+          uploadedUrl = newBlob.url;
+        } catch (clientErr: any) {
+          console.warn('Direct client upload attempt failed, attempting fallback:', clientErr);
+        }
+      }
 
-      const data = await res.json();
+      // 2. Fallback to standard server upload (for local dev or fallback)
+      if (!uploadedUrl) {
+        const formData = new FormData();
+        formData.append('file', file);
 
-      if (res.ok && data.success && data.url) {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success && data.url) {
+          uploadedUrl = data.url;
+        } else {
+          showStatus('error', data.error || 'Failed to upload photo');
+          return;
+        }
+      }
+
+      if (uploadedUrl) {
         if (target === 'wheel') {
-          setNewWheelImage(data.url);
+          setNewWheelImage(uploadedUrl);
           setWheelFileName(file.name);
-          // Auto-suggest title if empty
           if (!newWheelTitle) {
             const cleanTitle = file.name
               .replace(/\.[^/.]+$/, '')
@@ -161,7 +188,7 @@ export default function AdminPage() {
             setNewWheelTitle(cleanTitle);
           }
         } else {
-          setNewPortSrc(data.url);
+          setNewPortSrc(uploadedUrl);
           setPortFileName(file.name);
           if (!newPortTitle) {
             const cleanTitle = file.name
@@ -172,12 +199,10 @@ export default function AdminPage() {
           }
         }
         showStatus('success', `Photo "${file.name}" uploaded successfully!`);
-      } else {
-        showStatus('error', data.error || 'Failed to upload photo');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      showStatus('error', 'Network error while uploading photo');
+      showStatus('error', err?.message || 'Network error while uploading photo');
     } finally {
       if (target === 'wheel') setIsUploadingWheel(false);
       else setIsUploadingPort(false);
@@ -678,7 +703,7 @@ export default function AdminPage() {
                                 <span className="text-xs text-white/40">or drag & drop</span>
                               </div>
                               <span className="text-[10px] text-white/30">
-                                PNG, JPG, WEBP up to 10MB
+                                PNG, JPG, WEBP up to 50MB (high-res supported)
                               </span>
                             </>
                           )}
@@ -937,7 +962,7 @@ export default function AdminPage() {
                                 <span className="text-xs text-white/40">or drag & drop</span>
                               </div>
                               <span className="text-[10px] text-white/30">
-                                PNG, JPG, WEBP up to 10MB
+                                PNG, JPG, WEBP up to 50MB (high-res supported)
                               </span>
                             </>
                           )}
