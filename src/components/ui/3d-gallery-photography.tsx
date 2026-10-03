@@ -244,6 +244,13 @@ function GalleryScene({
 
 	const textures = useTexture(normalizedImages.map((img) => img.src));
 
+	// Notify preloader that all 3D gallery photo textures are decoded and loaded into GPU
+	useEffect(() => {
+		if (textures && textures.length > 0) {
+			window.dispatchEvent(new CustomEvent('gallery-ready'));
+		}
+	}, [textures]);
+
 	// Create materials pool
 	const materials = useMemo(
 		() => Array.from({ length: visibleCount }, () => createClothMaterial()),
@@ -622,6 +629,9 @@ export default function InfiniteGallery({
 	}, []);
 
 	if (!webglSupported) {
+		if (typeof window !== 'undefined') {
+			window.dispatchEvent(new CustomEvent('gallery-ready'));
+		}
 		return (
 			<div className={className} style={style}>
 				<FallbackGallery images={images} />

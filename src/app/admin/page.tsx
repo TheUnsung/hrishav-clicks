@@ -243,7 +243,7 @@ export default function AdminPage() {
       localStorage.setItem('hrishav_admin_auth', 'true');
       setAuthError('');
     } else {
-      setAuthError('Invalid credentials. Use admin / admin123');
+      setAuthError('Invalid credentials. Please try again.');
     }
   };
 
@@ -415,11 +415,6 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                <p className="text-[11px] text-amber-200/80 leading-relaxed">
-                  💡 <strong>Default credentials:</strong> Username: <code className="bg-black/40 px-1 py-0.5 rounded text-white">admin</code> | Password: <code className="bg-black/40 px-1 py-0.5 rounded text-white">admin123</code>
-                </p>
-              </div>
 
               <button
                 type="submit"

@@ -15,6 +15,8 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 
+import VariableFontCursorProximityDual from '@/components/ui/m-variable-font-cursor-proximity-2';
+
 export default function DemoPage() {
   const portfolioNavItems: NavItem[] = [
     {
@@ -128,6 +130,25 @@ export default function DemoPage() {
 
           <div className="flex justify-center pt-2">
             <LimelightNav className="bg-zinc-950/60 border-white/10" />
+          </div>
+        </div>
+
+        {/* Variant 3: Variable Font Cursor Proximity */}
+        <div className="p-8 rounded-2xl bg-zinc-900/60 border border-white/10 backdrop-blur-xl space-y-6">
+          <div className="text-left">
+            <span className="text-[10px] uppercase tracking-widest text-amber-300 font-semibold">
+              Variable Font Typography
+            </span>
+            <h2 className="text-lg font-semibold text-white">
+              Variable Font Cursor Proximity Dual
+            </h2>
+            <p className="text-xs text-white/40">
+              Interactive font-weight and axis modulation based on cursor distance.
+            </p>
+          </div>
+
+          <div className="py-12 px-4 rounded-xl bg-black/60 border border-white/5">
+            <VariableFontCursorProximityDual />
           </div>
         </div>
       </div>

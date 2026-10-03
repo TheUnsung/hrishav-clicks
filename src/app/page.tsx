@@ -4,12 +4,31 @@ import React, { useEffect, useState, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import InfiniteGallery from '@/components/ui/3d-gallery-photography';
 import type { WorksWheelItem } from '@/components/ui/works-wheel';
-import { Aperture, Mail, ArrowUp, Sliders, Maximize2, Sparkles, Grid, Info } from 'lucide-react';
+import { Mail, ArrowUp, Sliders, Maximize2, Sparkles, Grid, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImageLightbox } from '@/components/ui/image-lightbox';
 import { LimelightNav, NavItem } from '@/components/ui/limelight-nav';
 import { LiquidGlassCarousel } from '@/components/ui/liquid-glass-carousel';
+import { VariableFontCursorProximity } from '@/components/ui/variable-font-cursor-proximity';
 import initialPhotos from '@/data/photos.json';
+
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
 
 const worksData: WorksWheelItem[] = [
   {
@@ -251,9 +270,9 @@ function Navbar() {
             href="https://instagram.com/hrishav.frames"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/5 hover:bg-white/15 text-xs text-white/80 hover:text-white transition-all duration-300 font-distancia tracking-wider uppercase"
+            className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/5 hover:bg-white/15 text-xs text-white/80 hover:text-white transition-all duration-300 font-distancia tracking-wider uppercase group"
           >
-            <Aperture className="w-3.5 h-3.5 text-amber-300" />
+            <InstagramIcon className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform duration-200" />
             <span>Follow</span>
           </a>
           <Link
@@ -275,6 +294,7 @@ function Navbar() {
 // ─── 3D Photography Infinite Gallery Section ──────────────────────────────────
 
 function GallerySection({ items }: { items: WorksWheelItem[] }) {
+  const galleryContainerRef = useRef<HTMLDivElement>(null);
   const galleryImages = useMemo(() => {
     return items.map((item) => ({
       src: item.image,
@@ -283,7 +303,7 @@ function GallerySection({ items }: { items: WorksWheelItem[] }) {
   }, [items]);
 
   return (
-    <section id="gallery" className="relative bg-black h-screen w-full overflow-hidden">
+    <section ref={galleryContainerRef} id="gallery" className="relative bg-black h-screen w-full overflow-hidden">
       <InfiniteGallery
         images={galleryImages}
         speed={1.2}
@@ -292,10 +312,19 @@ function GallerySection({ items }: { items: WorksWheelItem[] }) {
         falloff={{ near: 0.8, far: 14 }}
         className="h-full w-full"
       >
-        {/* Brand title overlay with Abril Fatface and difference blend contrast effect */}
+        {/* Brand title overlay with Bodoni Moda / Abril Fatface italic and difference blend contrast effect with cursor proximity */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-center px-4 mix-blend-difference select-none z-10">
-          <h1 className="font-abril italic text-5xl sm:text-7xl md:text-8xl lg:text-9xl text-white tracking-tight leading-none mix-blend-difference">
-            hrishav.frames
+          <h1 className="font-bodoni italic text-5xl sm:text-7xl md:text-8xl lg:text-9xl text-white tracking-tight leading-none mix-blend-difference">
+            <VariableFontCursorProximity
+              containerRef={galleryContainerRef}
+              falloff="gaussian"
+              fromFontVariationSettings="'wght' 400, 'opsz' 72"
+              toFontVariationSettings="'wght' 900, 'opsz' 72"
+              radius={240}
+              className="text-white"
+            >
+              hrishav.frames
+            </VariableFontCursorProximity>
           </h1>
         </div>
 
@@ -322,6 +351,7 @@ function PortfolioSection({ items }: { items: PortfolioImage[] }) {
   const [viewMode, setViewMode] = useState<'grid' | 'glass'>('grid');
   const [filter, setFilter] = useState('All');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const headingContainerRef = useRef<HTMLDivElement>(null);
   const categories = ['All', ...new Set(items.map((img) => img.category))];
 
   const filtered = filter === 'All' ? items : items.filter((img) => img.category === filter);
@@ -338,11 +368,22 @@ function PortfolioSection({ items }: { items: PortfolioImage[] }) {
     <section id="portfolio" className="py-16 sm:py-24 bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Heading & View Toggle */}
-        <div className="text-center mb-8 sm:mb-10">
+        <div ref={headingContainerRef} className="text-center mb-8 sm:mb-10 select-none">
           <span className="text-xs uppercase tracking-[0.4em] text-white/30 mb-3 block font-distancia">
             Selected Works
           </span>
-          <h2 className="text-3xl sm:text-5xl font-bold text-white tracking-tight">Portfolio</h2>
+          <h2 className="text-3xl sm:text-5xl md:text-6xl text-white tracking-wider font-cinzel leading-tight inline-block">
+            <VariableFontCursorProximity
+              containerRef={headingContainerRef}
+              falloff="gaussian"
+              fromFontVariationSettings="'wght' 400"
+              toFontVariationSettings="'wght' 900"
+              radius={130}
+              className="text-white"
+            >
+              Portfolio
+            </VariableFontCursorProximity>
+          </h2>
           <p className="text-xs text-white/40 mt-2 font-distancia uppercase tracking-wider px-4">
             {viewMode === 'grid'
               ? 'Tap any photo to view enlarged'
@@ -512,10 +553,20 @@ function AboutSection() {
             </h2>
             <div className="space-y-4 text-white/65 leading-relaxed font-light text-sm sm:text-lg">
               <p>
-                At eighteen, I&apos;m a photography enthusiast driven by passion rather than profession. My journey began in 2017, when my father gifted me a <strong className="text-white font-medium">Nikon D3400</strong>.
+                I&apos;m{' '}
+                <a
+                  href="https://www.linkedin.com/in/hrishav-raj-singh-aa97b42b1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white font-medium hover:text-amber-300 underline decoration-white/30 hover:decoration-amber-300 transition-all duration-200"
+                  title="Hrishav Raj Singh on LinkedIn"
+                >
+                  Hrishav Raj Singh
+                </a>
+                , an eighteen-year-old photography enthusiast driven by passion rather than profession. My journey began in 2017, when my father gifted me a <strong className="text-white font-medium">Nikon D3400</strong>.
               </p>
               <p>
-                Through patience and practice, I transformed curiosity into a distinct visual perspective. Currently a member of the{' '}
+                Through patience and practice, I transformed curiosity into a distinct visual perspective. As a member of the{' '}
                 <a
                   href="https://www.instagram.com/jaypee.photo.enthusiasts.guild/"
                   target="_blank"
@@ -525,7 +576,7 @@ function AboutSection() {
                 >
                   Jaypee Photographic Enthusiasts Guild
                 </a>{' '}
-                at <strong className="text-white font-medium">JIIT Noida</strong>, I continue to refine my craft with every single frame.
+                at <strong className="text-white font-medium">JIIT Noida</strong>, I continue refining my craft with every single frame.
               </p>
             </div>
 
@@ -594,7 +645,7 @@ function ContactSection() {
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-3 sm:gap-3.5 px-5 sm:px-6 py-3.5 sm:py-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-amber-400/30 transition-all duration-300 group"
           >
-            <Aperture className="w-5 h-5 text-amber-300/70 group-hover:text-amber-300 transition-colors shrink-0" />
+            <InstagramIcon className="w-5 h-5 text-amber-300/70 group-hover:text-amber-300 group-hover:scale-110 transition-all shrink-0" />
             <div className="flex flex-col text-left">
               <span className="text-[10px] text-white/40 uppercase tracking-widest font-distancia">Instagram</span>
               <span className="text-xs sm:text-sm text-white/80 group-hover:text-white transition-colors font-medium">@hrishav.frames</span>

@@ -49,6 +49,7 @@ export const viewport = {
 };
 
 import { ContentProtection } from "@/components/ui/content-protection";
+import { Preloader } from "@/components/ui/preloader";
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -56,9 +57,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Cinzel:wght@400..900&family=Krona+One&family=Syncopate:wght@400;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Bodoni+Moda:ital,opsz,wght@0,6..72,400..900;1,6..72,400..900&family=Cinzel:wght@400..900&family=Krona+One&family=Syncopate:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-screen bg-black text-white antialiased font-sans">
+        <Preloader />
         <ContentProtection />
         {children}
       </body>
