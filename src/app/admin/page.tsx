@@ -48,6 +48,7 @@ export default function AdminPage() {
   const [worksData, setWorksData] = useState<WorksWheelItem[]>([]);
   const [portfolioImages, setPortfolioImages] = useState<PortfolioImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cloudStorage, setCloudStorage] = useState<boolean | null>(null);
   const [statusMessage, setStatusMessage] = useState<{
     type: 'success' | 'error';
     text: string;
@@ -100,6 +101,7 @@ export default function AdminPage() {
         const data = await res.json();
         setWorksData(data.worksData || []);
         setPortfolioImages(data.portfolioImages || []);
+        setCloudStorage(data.cloudStorage ?? false);
       }
     } catch (err) {
       console.error('Failed to load photos:', err);
@@ -196,14 +198,15 @@ export default function AdminPage() {
           portfolioImages: updatedPort,
         }),
       });
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.success) {
         showStatus('success', 'Changes saved to live portfolio!');
       } else {
-        showStatus('error', 'Error saving changes to server');
+        showStatus('error', data.error || 'Error saving changes to server');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      showStatus('error', 'Network error while saving changes');
+      showStatus('error', err?.message || 'Network error while saving changes');
     }
   };
 
@@ -486,9 +489,17 @@ export default function AdminPage() {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
               Photo Management Studio
             </h1>
-            <p className="text-white/40 text-sm mt-1">
-              Upload local photos or paste URLs to customize your live portfolio.
-            </p>
+            <div className="flex flex-wrap items-center gap-2.5 mt-1">
+              <p className="text-white/40 text-sm">
+                Upload local photos or paste URLs to customize your live portfolio.
+              </p>
+              {cloudStorage === true && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Cloud Storage Active
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Section Tabs */}
@@ -519,6 +530,30 @@ export default function AdminPage() {
             </button>
           </div>
         </div>
+
+        {/* Notice if cloud storage is not yet connected on live site */}
+        {cloudStorage === false && (
+          <div className="mb-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-200">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div className="text-xs sm:text-sm">
+                <span className="font-semibold text-white">To enable live photo uploading/saving on Vercel:</span> Connect free Vercel Blob.
+                <p className="text-white/60 text-xs mt-0.5">
+                  In your <strong className="text-amber-300">Vercel Dashboard → hrishav-clicks → Storage tab → Create Database → Blob</strong>. It takes 10 seconds and is 100% free!
+                </p>
+              </div>
+            </div>
+            <a
+              href="https://vercel.com/dashboard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-400 text-black text-xs font-semibold hover:bg-amber-300 transition"
+            >
+              <span>Vercel Dashboard</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        )}
 
         {loading ? (
           <div className="py-20 text-center text-white/40 flex items-center justify-center gap-3">
