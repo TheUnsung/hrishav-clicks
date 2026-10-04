@@ -526,18 +526,11 @@ function AboutSection() {
         <div className="grid md:grid-cols-2 gap-10 sm:gap-16 items-center">
           {/* Image */}
           <div className="relative">
-            <div className="aspect-[4/5] rounded-2xl overflow-hidden">
+            <div className="aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
               <img
-                src="https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=800&q=80"
-                alt="Photographer with camera"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="absolute -bottom-6 -right-6 w-48 h-48 rounded-2xl overflow-hidden border-4 border-black shadow-2xl hidden md:block">
-              <img
-                src="https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=400&q=80"
-                alt="Camera in hand close up"
-                className="w-full h-full object-cover"
+                src="/profile.jpg"
+                alt="Hrishav Raj Singh"
+                className="w-full h-full object-cover object-center"
               />
             </div>
           </div>
