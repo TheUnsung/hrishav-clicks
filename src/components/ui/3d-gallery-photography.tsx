@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { useRef, useMemo, useCallback, useState, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -208,7 +208,7 @@ function ImagePlane({
 			}}
 			onPointerOut={() => {
 				setHovered(false);
-				document.body.style.cursor = 'auto';
+				document.body.style.cursor = '';
 			}}
 		>
 			<planeGeometry args={[1, 1, 48, 48]} />
@@ -230,6 +230,7 @@ function GalleryScene({
 		maxBlur: 3.0,
 	},
 }: Omit<InfiniteGalleryProps, 'className' | 'style'>) {
+	const { gl } = useThree();
 	const [scrollVelocity, setScrollVelocity] = useState(0);
 	const [autoPlay, setAutoPlay] = useState(true);
 	const lastInteraction = useRef(Date.now());
@@ -313,12 +314,50 @@ function GalleryScene({
 	const handleWheel = useCallback(
 		(event: WheelEvent) => {
 			event.preventDefault();
-			setScrollVelocity((prev) => prev + event.deltaY * 0.01 * speed);
+			const delta =
+				Math.abs(event.deltaY) >= Math.abs(event.deltaX)
+					? event.deltaY
+					: event.deltaX;
+			setScrollVelocity((prev) => prev + delta * 0.012 * speed);
 			setAutoPlay(false);
 			lastInteraction.current = Date.now();
 		},
 		[speed]
 	);
+
+	// Mouse drag support for desktop
+	const isDragging = useRef(false);
+	const dragLastY = useRef(0);
+	const dragLastX = useRef(0);
+
+	const handleMouseDown = useCallback((e: MouseEvent) => {
+		if (e.button !== 0) return;
+		isDragging.current = true;
+		dragLastY.current = e.clientY;
+		dragLastX.current = e.clientX;
+		setAutoPlay(false);
+		lastInteraction.current = Date.now();
+	}, []);
+
+	const handleMouseMove = useCallback(
+		(e: MouseEvent) => {
+			if (!isDragging.current) return;
+			const dy = dragLastY.current - e.clientY;
+			const dx = dragLastX.current - e.clientX;
+			dragLastY.current = e.clientY;
+			dragLastX.current = e.clientX;
+
+			const delta = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
+			setScrollVelocity((prev) => prev + delta * 0.035 * speed);
+			setAutoPlay(false);
+			lastInteraction.current = Date.now();
+		},
+		[speed]
+	);
+
+	const handleMouseUp = useCallback(() => {
+		isDragging.current = false;
+	}, []);
 
 	// Handle keyboard input
 	const handleKeyDown = useCallback(
@@ -391,10 +430,13 @@ function GalleryScene({
 	}, []);
 
 	useEffect(() => {
-		const canvas = document.querySelector('canvas');
+		const canvas = gl.domElement;
 		if (canvas) {
 			canvas.style.touchAction = 'pan-y';
 			canvas.addEventListener('wheel', handleWheel, { passive: false });
+			canvas.addEventListener('mousedown', handleMouseDown);
+			window.addEventListener('mousemove', handleMouseMove);
+			window.addEventListener('mouseup', handleMouseUp);
 			canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
 			canvas.addEventListener('touchmove', handleTouchMove, { passive: true });
 			canvas.addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -403,6 +445,9 @@ function GalleryScene({
 
 			return () => {
 				canvas.removeEventListener('wheel', handleWheel);
+				canvas.removeEventListener('mousedown', handleMouseDown);
+				window.removeEventListener('mousemove', handleMouseMove);
+				window.removeEventListener('mouseup', handleMouseUp);
 				canvas.removeEventListener('touchstart', handleTouchStart);
 				canvas.removeEventListener('touchmove', handleTouchMove);
 				canvas.removeEventListener('touchend', handleTouchEnd);
@@ -410,7 +455,7 @@ function GalleryScene({
 				document.removeEventListener('keydown', handleKeyDown);
 			};
 		}
-	}, [handleWheel, handleKeyDown, handleTouchStart, handleTouchMove, handleTouchEnd]);
+	}, [gl, handleWheel, handleMouseDown, handleMouseMove, handleMouseUp, handleKeyDown, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
 	// Auto-play logic
 	useEffect(() => {

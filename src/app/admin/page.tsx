@@ -22,6 +22,9 @@ import {
   Link as LinkIcon,
   Loader2,
   FileCheck,
+  Edit3,
+  X,
+  Check,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { WorksWheelItem } from '@/components/ui/works-wheel';
@@ -83,6 +86,18 @@ export default function AdminPage() {
 
   const wheelFileInputRef = useRef<HTMLInputElement>(null);
   const portFileInputRef = useRef<HTMLInputElement>(null);
+  const editWheelFileInputRef = useRef<HTMLInputElement>(null);
+  const editPortFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Editing state for Wheel item
+  const [editingWheelIndex, setEditingWheelIndex] = useState<number | null>(null);
+  const [editWheelForm, setEditWheelForm] = useState<WorksWheelItem | null>(null);
+  const [isUploadingEditWheel, setIsUploadingEditWheel] = useState(false);
+
+  // Editing state for Portfolio item
+  const [editingPortIndex, setEditingPortIndex] = useState<number | null>(null);
+  const [editPortForm, setEditPortForm] = useState<PortfolioImage | null>(null);
+  const [isUploadingEditPort, setIsUploadingEditPort] = useState(false);
 
   // Check login session on mount
   useEffect(() => {
@@ -199,10 +214,13 @@ export default function AdminPage() {
           }
         }
         showStatus('success', `Photo "${file.name}" uploaded successfully!`);
+        return uploadedUrl;
       }
+      return null;
     } catch (err: any) {
       console.error(err);
       showStatus('error', err?.message || 'Network error while uploading photo');
+      return null;
     } finally {
       if (target === 'wheel') setIsUploadingWheel(false);
       else setIsUploadingPort(false);
@@ -328,6 +346,95 @@ export default function AdminPage() {
     const updated = portfolioImages.filter((_, i) => i !== index);
     setPortfolioImages(updated);
     savePhotos(worksData, updated);
+  };
+
+  // Start editing a wheel item
+  const handleStartEditWheel = (index: number) => {
+    setEditingWheelIndex(index);
+    setEditWheelForm({ ...worksData[index] });
+  };
+
+  // Save edited wheel item
+  const handleSaveEditWheel = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingWheelIndex === null || !editWheelForm) return;
+    if (!editWheelForm.title.trim() || !editWheelForm.image.trim()) {
+      showStatus('error', 'Title and photo are required');
+      return;
+    }
+
+    const updated = [...worksData];
+    const rawHref = editWheelForm.href ? editWheelForm.href.trim() : '';
+    updated[editingWheelIndex] = {
+      title: editWheelForm.title.trim(),
+      image: editWheelForm.image.trim(),
+      href: rawHref || `#${editWheelForm.title.toLowerCase().replace(/\s+/g, '-')}`,
+    };
+
+    setWorksData(updated);
+    savePhotos(updated, portfolioImages);
+    setEditingWheelIndex(null);
+    setEditWheelForm(null);
+    showStatus('success', 'Wheel photo updated successfully!');
+  };
+
+  // Start editing a portfolio item
+  const handleStartEditPort = (index: number) => {
+    setEditingPortIndex(index);
+    setEditPortForm({ ...portfolioImages[index] });
+  };
+
+  // Save edited portfolio item
+  const handleSaveEditPort = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingPortIndex === null || !editPortForm) return;
+    if (!editPortForm.title.trim() || !editPortForm.src.trim()) {
+      showStatus('error', 'Title and photo are required');
+      return;
+    }
+
+    const updated = [...portfolioImages];
+    updated[editingPortIndex] = {
+      ...editPortForm,
+      title: editPortForm.title.trim(),
+      src: editPortForm.src.trim(),
+      alt: editPortForm.alt.trim() || editPortForm.title.trim(),
+      category: editPortForm.category.trim() || 'General',
+    };
+
+    setPortfolioImages(updated);
+    savePhotos(worksData, updated);
+    setEditingPortIndex(null);
+    setEditPortForm(null);
+    showStatus('success', 'Portfolio photo updated successfully!');
+  };
+
+  // Upload replacement image for an existing item being edited
+  const handleEditImageUpload = async (
+    file: File,
+    target: 'wheel' | 'port'
+  ) => {
+    if (target === 'wheel') setIsUploadingEditWheel(true);
+    else setIsUploadingEditPort(true);
+
+    try {
+      const uploadTarget = target === 'wheel' ? 'wheel' : 'portfolio';
+      const uploadedUrl = await uploadImageFile(file, uploadTarget);
+      if (uploadedUrl) {
+        if (target === 'wheel') {
+          setEditWheelForm((prev) => (prev ? { ...prev, image: uploadedUrl } : null));
+        } else {
+          setEditPortForm((prev) => (prev ? { ...prev, src: uploadedUrl } : null));
+        }
+        showStatus('success', 'New replacement photo uploaded!');
+      }
+    } catch (err: any) {
+      console.error(err);
+      showStatus('error', err?.message || 'Error uploading replacement photo');
+    } finally {
+      if (target === 'wheel') setIsUploadingEditWheel(false);
+      else setIsUploadingEditPort(false);
+    }
   };
 
   // Preset sample helpers
@@ -817,13 +924,22 @@ export default function AdminPage() {
                             <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-[10px] font-mono text-white/70">
                               #{index + 1}
                             </div>
-                            <button
-                              onClick={() => handleDeleteWheelItem(index)}
-                              className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/70 text-rose-400 hover:bg-rose-500 hover:text-white transition backdrop-blur-md"
-                              title="Delete from Wheel"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleStartEditWheel(index)}
+                                className="p-1.5 rounded-lg bg-black/70 text-amber-300 hover:bg-amber-400 hover:text-black transition backdrop-blur-md"
+                                title="Edit Photo Details & Image"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteWheelItem(index)}
+                                className="p-1.5 rounded-lg bg-black/70 text-rose-400 hover:bg-rose-500 hover:text-white transition backdrop-blur-md"
+                                title="Delete from Wheel"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </div>
                           <div className="p-3 bg-zinc-950/70 border-t border-white/5">
                             <h4 className="font-medium text-sm text-white truncate">
@@ -1148,13 +1264,22 @@ export default function AdminPage() {
                             <div className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-black/60 text-[10px] text-white/60">
                               {img.aspect}
                             </div>
-                            <button
-                              onClick={() => handleDeletePortfolioItem(index)}
-                              className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/70 text-rose-400 hover:bg-rose-500 hover:text-white transition backdrop-blur-md"
-                              title="Delete from Portfolio"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleStartEditPort(index)}
+                                className="p-1.5 rounded-lg bg-black/70 text-amber-300 hover:bg-amber-400 hover:text-black transition backdrop-blur-md"
+                                title="Edit Photo Details & Image"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeletePortfolioItem(index)}
+                                className="p-1.5 rounded-lg bg-black/70 text-rose-400 hover:bg-rose-500 hover:text-white transition backdrop-blur-md"
+                                title="Delete from Portfolio"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </div>
                           <div className="p-3 bg-zinc-950/70 border-t border-white/5">
                             <h4 className="font-medium text-sm text-white truncate">
@@ -1172,6 +1297,309 @@ export default function AdminPage() {
               </div>
             )}
           </>
+        )}
+
+        {/* ═════════════════════════════════════════════════════════════ */}
+        {/* MODAL 1: EDIT WHEEL ITEM MODAL                              */}
+        {/* ═════════════════════════════════════════════════════════════ */}
+        {editingWheelIndex !== null && editWheelForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div className="bg-zinc-900 border border-white/20 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+              {/* Header */}
+              <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-zinc-950/50">
+                <div className="flex items-center gap-2">
+                  <Edit3 className="w-4 h-4 text-amber-300" />
+                  <h3 className="font-semibold text-white text-base">
+                    Edit 3D Wheel Photo #{editingWheelIndex + 1}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingWheelIndex(null);
+                    setEditWheelForm(null);
+                  }}
+                  className="p-1 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleSaveEditWheel} className="p-5 sm:p-6 space-y-4 overflow-y-auto">
+                {/* Title */}
+                <div>
+                  <label className="block text-xs uppercase tracking-wider font-semibold text-white/60 mb-1.5">
+                    Photo Title
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editWheelForm.title}
+                    onChange={(e) => setEditWheelForm({ ...editWheelForm, title: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-black/60 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-amber-400/50"
+                  />
+                </div>
+
+                {/* Href / Hashtags */}
+                <div>
+                  <label className="block text-xs uppercase tracking-wider font-semibold text-white/60 mb-1.5">
+                    Hashtags / Link Target
+                  </label>
+                  <input
+                    type="text"
+                    value={editWheelForm.href || ''}
+                    onChange={(e) => setEditWheelForm({ ...editWheelForm, href: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-black/60 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-amber-400/50"
+                  />
+                </div>
+
+                {/* Photo Preview & Replacement Upload */}
+                <div>
+                  <label className="block text-xs uppercase tracking-wider font-semibold text-white/60 mb-2">
+                    Current Photo / Replace Image
+                  </label>
+                  <div className="flex flex-col sm:flex-row gap-4 items-start">
+                    <div className="w-32 h-24 rounded-xl overflow-hidden bg-black border border-white/10 shrink-0 relative">
+                      <img
+                        src={editWheelForm.image}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-2 w-full">
+                      <input
+                        type="file"
+                        ref={editWheelFileInputRef}
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleEditImageUpload(file, 'wheel');
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => editWheelFileInputRef.current?.click()}
+                        disabled={isUploadingEditWheel}
+                        className="w-full py-2 px-3 bg-white/10 hover:bg-white/20 border border-white/15 rounded-xl text-xs font-medium text-white transition flex items-center justify-center gap-2"
+                      >
+                        {isUploadingEditWheel ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <UploadCloud className="w-3.5 h-3.5 text-amber-300" />
+                            Choose New Image to Replace
+                          </>
+                        )}
+                      </button>
+                      <input
+                        type="url"
+                        placeholder="Or paste an image URL..."
+                        value={editWheelForm.image}
+                        onChange={(e) => setEditWheelForm({ ...editWheelForm, image: e.target.value })}
+                        className="w-full px-3 py-1.5 bg-black/40 border border-white/10 rounded-lg text-xs text-white/80 focus:outline-none focus:border-amber-400/50"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingWheelIndex(null);
+                      setEditWheelForm(null);
+                    }}
+                    className="px-4 py-2 rounded-xl text-xs font-medium text-white/60 hover:text-white hover:bg-white/5 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUploadingEditWheel}
+                    className="px-5 py-2.5 bg-amber-300 text-black font-semibold rounded-xl text-xs hover:bg-amber-200 active:scale-[0.99] transition flex items-center gap-1.5 shadow-lg shadow-amber-500/10"
+                  >
+                    <Check className="w-4 h-4" />
+                    Save Wheel Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ═════════════════════════════════════════════════════════════ */}
+        {/* MODAL 2: EDIT PORTFOLIO ITEM MODAL                          */}
+        {/* ═════════════════════════════════════════════════════════════ */}
+        {editingPortIndex !== null && editPortForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div className="bg-zinc-900 border border-white/20 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+              {/* Header */}
+              <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-zinc-950/50">
+                <div className="flex items-center gap-2">
+                  <Edit3 className="w-4 h-4 text-amber-300" />
+                  <h3 className="font-semibold text-white text-base">
+                    Edit Portfolio Photo #{editingPortIndex + 1}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingPortIndex(null);
+                    setEditPortForm(null);
+                  }}
+                  className="p-1 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleSaveEditPort} className="p-5 sm:p-6 space-y-4 overflow-y-auto">
+                {/* Title */}
+                <div>
+                  <label className="block text-xs uppercase tracking-wider font-semibold text-white/60 mb-1.5">
+                    Photo Title
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editPortForm.title}
+                    onChange={(e) => setEditPortForm({ ...editPortForm, title: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-black/60 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-amber-400/50"
+                  />
+                </div>
+
+                {/* Description / Alt text */}
+                <div>
+                  <label className="block text-xs uppercase tracking-wider font-semibold text-white/60 mb-1.5">
+                    Description / Alt Text
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={editPortForm.alt || ''}
+                    onChange={(e) => setEditPortForm({ ...editPortForm, alt: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-black/60 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-amber-400/50 resize-none"
+                  />
+                </div>
+
+                {/* Category & Aspect Ratio Row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider font-semibold text-white/60 mb-1.5">
+                      Category
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editPortForm.category}
+                      onChange={(e) => setEditPortForm({ ...editPortForm, category: e.target.value })}
+                      className="w-full px-3 py-2 bg-black/60 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider font-semibold text-white/60 mb-1.5">
+                      Aspect Ratio
+                    </label>
+                    <select
+                      value={editPortForm.aspect}
+                      onChange={(e) =>
+                        setEditPortForm({
+                          ...editPortForm,
+                          aspect: e.target.value as 'tall' | 'wide' | 'square',
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-black/60 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400/50"
+                    >
+                      <option value="tall" className="bg-zinc-900">Tall (Portrait)</option>
+                      <option value="wide" className="bg-zinc-900">Wide (Landscape)</option>
+                      <option value="square" className="bg-zinc-900">Square (1:1)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Photo Preview & Replacement Upload */}
+                <div>
+                  <label className="block text-xs uppercase tracking-wider font-semibold text-white/60 mb-2">
+                    Current Photo / Replace Image
+                  </label>
+                  <div className="flex flex-col sm:flex-row gap-4 items-start">
+                    <div className="w-32 h-24 rounded-xl overflow-hidden bg-black border border-white/10 shrink-0 relative">
+                      <img
+                        src={editPortForm.src}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-2 w-full">
+                      <input
+                        type="file"
+                        ref={editPortFileInputRef}
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleEditImageUpload(file, 'port');
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => editPortFileInputRef.current?.click()}
+                        disabled={isUploadingEditPort}
+                        className="w-full py-2 px-3 bg-white/10 hover:bg-white/20 border border-white/15 rounded-xl text-xs font-medium text-white transition flex items-center justify-center gap-2"
+                      >
+                        {isUploadingEditPort ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <UploadCloud className="w-3.5 h-3.5 text-amber-300" />
+                            Choose New Image to Replace
+                          </>
+                        )}
+                      </button>
+                      <input
+                        type="url"
+                        placeholder="Or paste an image URL..."
+                        value={editPortForm.src}
+                        onChange={(e) => setEditPortForm({ ...editPortForm, src: e.target.value })}
+                        className="w-full px-3 py-1.5 bg-black/40 border border-white/10 rounded-lg text-xs text-white/80 focus:outline-none focus:border-amber-400/50"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingPortIndex(null);
+                      setEditPortForm(null);
+                    }}
+                    className="px-4 py-2 rounded-xl text-xs font-medium text-white/60 hover:text-white hover:bg-white/5 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUploadingEditPort}
+                    className="px-5 py-2.5 bg-amber-300 text-black font-semibold rounded-xl text-xs hover:bg-amber-200 active:scale-[0.99] transition flex items-center gap-1.5 shadow-lg shadow-amber-500/10"
+                  >
+                    <Check className="w-4 h-4" />
+                    Save Portfolio Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
       </div>
     </div>

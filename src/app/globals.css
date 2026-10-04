@@ -228,3 +228,43 @@ img {
 .final-pulse-anim {
   animation: finalBurstPulse 0.6s ease-out forwards !important;
 }
+
+/* Custom Cursor Experience Rules (Desktop with fine pointer only) */
+@media (hover: hover) and (pointer: fine) {
+  /* Aperture Iris Mode: camera lens reacts to hover & click, hide system cursor */
+  html.cursor-aperture,
+  html.cursor-aperture body,
+  html.cursor-aperture *,
+  html.cursor-aperture *::before,
+  html.cursor-aperture *::after {
+    cursor: none !important;
+  }
+
+  /* Nyan Cat Mode: cat follows pointer, pointer hand over clickable elements */
+  html.cursor-nyan,
+  html.cursor-nyan body {
+    cursor: none;
+  }
+  html.cursor-nyan a,
+  html.cursor-nyan button,
+  html.cursor-nyan input,
+  html.cursor-nyan textarea,
+  html.cursor-nyan select,
+  html.cursor-nyan [role="button"],
+  html.cursor-nyan .cursor-pointer {
+    cursor: pointer;
+  }
+
+  /* Default Mode: clean native OS pointer */
+  html.cursor-default,
+  html.cursor-default body,
+  html.cursor-default * {
+    cursor: auto;
+  }
+  html.cursor-default a,
+  html.cursor-default button,
+  html.cursor-default [role="button"],
+  html.cursor-default .cursor-pointer {
+    cursor: pointer;
+  }
+}

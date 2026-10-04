@@ -171,7 +171,11 @@ export async function POST(request: Request) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    fs.writeFileSync(dataFilePath, JSON.stringify(updatedData, null, 2), 'utf8');
+    // Atomic write to prevent zero-padding or corruption during rapid saves or reloads
+    const tempFilePath = `${dataFilePath}.tmp.${Date.now()}`;
+    const jsonString = JSON.stringify(updatedData, null, 2);
+    fs.writeFileSync(tempFilePath, jsonString, 'utf8');
+    fs.renameSync(tempFilePath, dataFilePath);
 
     return NextResponse.json({
       success: true,

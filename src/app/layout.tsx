@@ -50,6 +50,7 @@ export const viewport = {
 
 import { ContentProtection } from "@/components/ui/content-protection";
 import { Preloader } from "@/components/ui/preloader";
+import { CursorManager } from "@/components/ui/cursor-manager";
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-screen bg-black text-white antialiased font-sans">
         <Preloader />
+        <CursorManager />
         <ContentProtection />
         {children}
       </body>

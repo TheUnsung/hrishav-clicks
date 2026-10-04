@@ -1,22 +1,37 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
+import { Camera, Sparkles, MousePointer, ArrowRight } from 'lucide-react';
 
 export function Preloader() {
   const [mounted, setMounted] = useState(true);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [progress, setProgress] = useState(0); // 0 to 100
   const [isPulse, setIsPulse] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [showCursorOptions, setShowCursorOptions] = useState(false);
+  const [selectedCursor, setSelectedCursor] = useState<'aperture' | 'nyan' | 'default'>('aperture');
 
   const targetProgressRef = useRef(15);
   const currentProgressRef = useRef(0);
   const animFrameRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const originalOverflowRef = useRef('');
 
   useEffect(() => {
     // 1. Disable page scrolling while loader is visible
     const originalOverflow = document.body.style.overflow;
+    originalOverflowRef.current = originalOverflow;
     document.body.style.overflow = 'hidden';
+
+    // Detect if desktop with mouse
+    const hasMouse = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    setIsDesktop(hasMouse);
+
+    const saved = localStorage.getItem('preferred-cursor') as 'aperture' | 'nyan' | 'default' | null;
+    if (saved && ['aperture', 'nyan', 'default'].includes(saved)) {
+      setSelectedCursor(saved);
+    }
 
     // Play the audio from the video (browsers allow unmuted audio if allowed or on first gesture)
     if (audioRef.current) {
@@ -106,25 +121,13 @@ export function Preloader() {
         setIsPulse(true);
 
         setTimeout(() => {
-          // Fade loader out over 0.5s
-          setIsFadingOut(true);
-
-          // Fade out audio gracefully
-          if (audioRef.current) {
-            const fadeAudio = setInterval(() => {
-              if (audioRef.current && audioRef.current.volume > 0.1) {
-                audioRef.current.volume = Math.max(0, audioRef.current.volume - 0.2);
-              } else {
-                clearInterval(fadeAudio);
-                if (audioRef.current) audioRef.current.pause();
-              }
-            }, 80);
+          if (hasMouse) {
+            // For desktop devices: reveal cursor selection screen before entering
+            setShowCursorOptions(true);
+          } else {
+            // For mobile devices: enter immediately without cursor options
+            dismissLoader();
           }
-
-          setTimeout(() => {
-            setMounted(false);
-            document.body.style.overflow = originalOverflow || '';
-          }, 500);
         }, 550);
 
         return;
@@ -143,6 +146,38 @@ export function Preloader() {
       document.body.style.overflow = originalOverflow || '';
     };
   }, []);
+
+  const dismissLoader = () => {
+    setIsFadingOut(true);
+
+    // Fade out audio gracefully
+    if (audioRef.current) {
+      const fadeAudio = setInterval(() => {
+        if (audioRef.current && audioRef.current.volume > 0.1) {
+          audioRef.current.volume = Math.max(0, audioRef.current.volume - 0.2);
+        } else {
+          clearInterval(fadeAudio);
+          if (audioRef.current) audioRef.current.pause();
+        }
+      }, 80);
+    }
+
+    setTimeout(() => {
+      setMounted(false);
+      document.body.style.overflow = originalOverflowRef.current || '';
+    }, 500);
+  };
+
+  const handleSelectCursor = (type: 'aperture' | 'nyan' | 'default') => {
+    setSelectedCursor(type);
+    localStorage.setItem('preferred-cursor', type);
+    window.dispatchEvent(new CustomEvent('cursor-change', { detail: type }));
+  };
+
+  const handleEnterSite = () => {
+    handleSelectCursor(selectedCursor);
+    dismissLoader();
+  };
 
   if (!mounted) return null;
 
@@ -177,57 +212,170 @@ export function Preloader() {
       </div>
 
       <div
-        className={`relative flex items-center justify-center transition-transform duration-300 ${
+        className={`relative flex flex-col items-center justify-center transition-all duration-500 ${
           isPulse ? 'final-pulse-anim' : ''
         }`}
         style={{
-          width: 'clamp(120px, 25vw, 300px)',
-          maxWidth: '300px',
+          width: showCursorOptions ? 'clamp(300px, 90vw, 680px)' : 'clamp(120px, 25vw, 300px)',
+          maxWidth: showCursorOptions ? '680px' : '300px',
         }}
       >
-        {/* Layer 1: Base dimmed, grayscale background logo (opacity ~0.25) */}
-        <img
-          src="/logo.png"
-          alt="hrishav.frames"
-          className="w-full h-auto object-contain block opacity-25 filter grayscale select-none pointer-events-none"
-          draggable={false}
-        />
-
-        {/* Layer 2: Glowing full-white filled logo revealed via horizontal clip-path */}
+        {/* Top: Logo Animation */}
         <div
-          className="absolute inset-0 overflow-hidden pointer-events-none select-none"
-          style={{
-            clipPath: `inset(0 ${clipInsetRight}% 0 0)`,
-            WebkitClipPath: `inset(0 ${clipInsetRight}% 0 0)`,
-          }}
+          className={`relative transition-all duration-500 ${
+            showCursorOptions ? 'w-24 sm:w-28 mb-5 sm:mb-6' : 'w-full'
+          }`}
         >
+          {/* Layer 1: Base dimmed, grayscale background logo (opacity ~0.25) */}
           <img
             src="/logo.png"
             alt="hrishav.frames"
-            className="w-full h-auto object-contain block select-none pointer-events-none"
-            style={{
-              filter:
-                'drop-shadow(0 0 10px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 25px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 50px rgba(255, 255, 255, 0.3))',
-            }}
+            className="w-full h-auto object-contain block opacity-25 filter grayscale select-none pointer-events-none"
             draggable={false}
           />
+
+          {/* Layer 2: Glowing full-white filled logo revealed via horizontal clip-path */}
+          <div
+            className="absolute inset-0 overflow-hidden pointer-events-none select-none"
+            style={{
+              clipPath: `inset(0 ${clipInsetRight}% 0 0)`,
+              WebkitClipPath: `inset(0 ${clipInsetRight}% 0 0)`,
+            }}
+          >
+            <img
+              src="/logo.png"
+              alt="hrishav.frames"
+              className="w-full h-auto object-contain block select-none pointer-events-none"
+              style={{
+                filter:
+                  'drop-shadow(0 0 10px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 25px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 50px rgba(255, 255, 255, 0.3))',
+              }}
+              draggable={false}
+            />
+          </div>
+
+          {/* Layer 3: Thin bright vertical glowing light bar following the exact fill line */}
+          {progress > 0 && progress < 100 && (
+            <div
+              className="absolute top-0 bottom-0 pointer-events-none"
+              style={{
+                left: `${progress}%`,
+                transform: 'translateX(-50%)',
+                width: '4px',
+                background: 'linear-gradient(to bottom, transparent, #ffffff 25%, #ffffff 75%, transparent)',
+                boxShadow:
+                  '0 0 12px 3px #ffffff, 0 0 24px 6px rgba(255, 255, 255, 0.8), 0 0 45px 10px rgba(255, 255, 255, 0.4)',
+                borderRadius: '9999px',
+                zIndex: 10,
+              }}
+            />
+          )}
         </div>
 
-        {/* Layer 3: Thin bright vertical glowing light bar following the exact fill line */}
-        {progress > 0 && progress < 100 && (
-          <div
-            className="absolute top-0 bottom-0 pointer-events-none"
-            style={{
-              left: `${progress}%`,
-              transform: 'translateX(-50%)',
-              width: '4px',
-              background: 'linear-gradient(to bottom, transparent, #ffffff 25%, #ffffff 75%, transparent)',
-              boxShadow:
-                '0 0 12px 3px #ffffff, 0 0 24px 6px rgba(255, 255, 255, 0.8), 0 0 45px 10px rgba(255, 255, 255, 0.4)',
-              borderRadius: '9999px',
-              zIndex: 10,
-            }}
-          />
+        {/* Cursor Selection Panel (Desktop Only before entering the site) */}
+        {showCursorOptions && (
+          <div className="w-full text-center flex flex-col items-center animate-in fade-in zoom-in-95 duration-500">
+            <span className="text-[10px] sm:text-xs tracking-[0.3em] font-distancia text-amber-300 uppercase">
+              Interactive Experience
+            </span>
+            <h3 className="text-xl sm:text-2xl font-cinzel text-white mt-1">
+              Select Your Cursor
+            </h3>
+            <p className="text-[10px] sm:text-xs text-white/50 font-distancia uppercase tracking-wider mt-1 mb-5 sm:mb-6">
+              Choose your interactive pointer before entering the portfolio
+            </p>
+
+            {/* 3 Cursor Options Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full mb-6">
+              {/* Option 1: Aperture Cursor */}
+              <button
+                type="button"
+                onClick={() => handleSelectCursor('aperture')}
+                className={`relative flex flex-col items-center text-center p-4 rounded-2xl border transition-all duration-300 cursor-pointer ${
+                  selectedCursor === 'aperture'
+                    ? 'bg-amber-400/15 border-amber-400/80 shadow-[0_0_25px_rgba(251,191,36,0.25)] ring-1 ring-amber-400/50 scale-[1.02]'
+                    : 'bg-zinc-900/60 border-white/10 hover:border-white/25 hover:bg-zinc-900/90'
+                }`}
+              >
+                <div className="w-10 h-10 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center mb-3">
+                  <Camera className="w-5 h-5 text-amber-300" />
+                </div>
+                <span className="font-cinzel text-sm sm:text-base text-white font-medium">
+                  Aperture Iris
+                </span>
+                <span className="text-[9.5px] text-white/50 font-distancia uppercase tracking-wider mt-1.5 leading-relaxed">
+                  Camera Lens · Shutter Flash & RAW Badges Burst
+                </span>
+                {selectedCursor === 'aperture' && (
+                  <span className="mt-2.5 text-[9px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 font-distancia uppercase tracking-wider">
+                    Selected
+                  </span>
+                )}
+              </button>
+
+              {/* Option 2: Nyan Cat Cursor */}
+              <button
+                type="button"
+                onClick={() => handleSelectCursor('nyan')}
+                className={`relative flex flex-col items-center text-center p-4 rounded-2xl border transition-all duration-300 cursor-pointer ${
+                  selectedCursor === 'nyan'
+                    ? 'bg-purple-500/15 border-purple-400/80 shadow-[0_0_25px_rgba(168,85,247,0.25)] ring-1 ring-purple-400/50 scale-[1.02]'
+                    : 'bg-zinc-900/60 border-white/10 hover:border-white/25 hover:bg-zinc-900/90'
+                }`}
+              >
+                <div className="w-10 h-10 rounded-full bg-purple-500/10 border border-purple-400/30 flex items-center justify-center mb-3">
+                  <Sparkles className="w-5 h-5 text-purple-300" />
+                </div>
+                <span className="font-cinzel text-sm sm:text-base text-white font-medium">
+                  Nyan Cat
+                </span>
+                <span className="text-[9.5px] text-white/50 font-distancia uppercase tracking-wider mt-1.5 leading-relaxed">
+                  Retro Pop-Tart Cat · 6-Color Rainbow Wave
+                </span>
+                {selectedCursor === 'nyan' && (
+                  <span className="mt-2.5 text-[9px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/30 font-distancia uppercase tracking-wider">
+                    Selected
+                  </span>
+                )}
+              </button>
+
+              {/* Option 3: Default Pointer */}
+              <button
+                type="button"
+                onClick={() => handleSelectCursor('default')}
+                className={`relative flex flex-col items-center text-center p-4 rounded-2xl border transition-all duration-300 cursor-pointer ${
+                  selectedCursor === 'default'
+                    ? 'bg-white/15 border-white shadow-[0_0_25px_rgba(255,255,255,0.2)] ring-1 ring-white/50 scale-[1.02]'
+                    : 'bg-zinc-900/60 border-white/10 hover:border-white/25 hover:bg-zinc-900/90'
+                }`}
+              >
+                <div className="w-10 h-10 rounded-full bg-white/10 border border-white/30 flex items-center justify-center mb-3">
+                  <MousePointer className="w-5 h-5 text-zinc-200" />
+                </div>
+                <span className="font-cinzel text-sm sm:text-base text-white font-medium">
+                  Classic
+                </span>
+                <span className="text-[9.5px] text-white/50 font-distancia uppercase tracking-wider mt-1.5 leading-relaxed">
+                  Minimal Standard · Native System Pointer
+                </span>
+                {selectedCursor === 'default' && (
+                  <span className="mt-2.5 text-[9px] px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30 font-distancia uppercase tracking-wider">
+                    Selected
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Enter Portfolio Button */}
+            <button
+              type="button"
+              onClick={handleEnterSite}
+              className="inline-flex items-center gap-2.5 px-8 py-3 rounded-full bg-gradient-to-r from-amber-200 via-amber-300 to-yellow-400 hover:from-amber-100 hover:to-amber-300 text-black font-semibold text-xs font-distancia tracking-[0.2em] uppercase shadow-[0_0_30px_rgba(251,191,36,0.4)] hover:shadow-[0_0_40px_rgba(251,191,36,0.6)] transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <span>Enter Portfolio</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
         )}
       </div>
 
