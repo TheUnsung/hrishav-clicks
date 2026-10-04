@@ -206,10 +206,6 @@ export function Preloader() {
         preload="auto"
         playsInline
       />
-      {/* Decorative ambient subtle star sparkle in bottom right like reference video */}
-      <div className="absolute bottom-8 right-8 text-white/30 text-lg select-none pointer-events-none">
-        ✦
-      </div>
 
       <div
         className={`relative flex flex-col items-center justify-center transition-all duration-500 ${
