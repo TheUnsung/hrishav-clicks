@@ -20,7 +20,7 @@ export function ApertureCursor() {
 
     const LIFE = 1800; // ms each badge stays
     const MAX = 90;
-    const R = 19; // cursor radius
+    const R = 18; // cursor radius (increased by 50%)
     const LOGO_CHANCE = 0.22; // chance a burst item is an Lr / Ps logo
 
     let W = window.innerWidth;
@@ -221,7 +221,7 @@ export function ApertureCursor() {
     /* ---------- aperture drawing ---------- */
     function drawAperture(x: number, y: number, o: number) {
       if (!ctx) return;
-      const r = 4 + Math.min(o, 1.2) * 8.5; // hole radius
+      const r = 3.8 + Math.min(o, 1.2) * 8.0; // hole radius scaled for R=18
       const rot = -Math.PI / 2 + o * 0.7 + (reduce ? 0 : 0); // blades twist as it opens
       const sc = down ? 1.12 : 1;
       const v = (i: number): [number, number] => [
@@ -233,7 +233,7 @@ export function ApertureCursor() {
       ctx.translate(x, y);
       ctx.scale(sc, sc);
       ctx.shadowColor = 'rgba(0,0,0,.55)';
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 7;
 
       // lens body
       ctx.beginPath();

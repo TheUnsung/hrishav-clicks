@@ -113,10 +113,14 @@ export function CursorManager() {
                     : 'text-white/70 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                <MousePointer className="w-3.5 h-3.5 text-zinc-300" />
+                <img
+                  src="/cursors/pointer.png"
+                  alt="Aero Black"
+                  className="w-3.5 h-3.5 object-contain filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+                />
                 <div className="flex flex-col">
-                  <span className="font-medium">Classic</span>
-                  <span className="text-[9px] text-white/40">Default OS Pointer</span>
+                  <span className="font-medium">Aero Black</span>
+                  <span className="text-[9px] text-white/40">Classic Modern Dark</span>
                 </div>
               </button>
             </div>
@@ -131,10 +135,16 @@ export function CursorManager() {
           >
             {cursor === 'aperture' && <Camera className="w-3.5 h-3.5 text-amber-300" />}
             {cursor === 'nyan' && <Sparkles className="w-3.5 h-3.5 text-purple-300" />}
-            {cursor === 'default' && <MousePointer className="w-3.5 h-3.5 text-zinc-300" />}
+            {cursor === 'default' && (
+              <img
+                src="/cursors/pointer.png"
+                alt="Aero Black"
+                className="w-3.5 h-3.5 object-contain filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+              />
+            )}
 
             <span className="text-[11px] font-distancia uppercase tracking-wider capitalize">
-              {cursor}
+              {cursor === 'default' ? 'Aero Black' : cursor}
             </span>
             <ChevronUp
               className={`w-3 h-3 text-white/40 transition-transform duration-200 ${

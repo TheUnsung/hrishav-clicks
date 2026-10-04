@@ -339,7 +339,7 @@ export function Preloader() {
                 )}
               </button>
 
-              {/* Option 3: Default Pointer */}
+              {/* Option 3: Aero Black Modern Pointer */}
               <button
                 type="button"
                 onClick={() => handleSelectCursor('default')}
@@ -350,13 +350,17 @@ export function Preloader() {
                 }`}
               >
                 <div className="w-10 h-10 rounded-full bg-white/10 border border-white/30 flex items-center justify-center mb-3">
-                  <MousePointer className="w-5 h-5 text-zinc-200" />
+                  <img
+                    src="/cursors/pointer.png"
+                    alt="Aero Black"
+                    className="w-5 h-5 object-contain filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                  />
                 </div>
                 <span className="font-cinzel text-sm sm:text-base text-white font-medium">
-                  Classic
+                  Aero Black
                 </span>
                 <span className="text-[9.5px] text-white/50 font-distancia uppercase tracking-wider mt-1.5 leading-relaxed">
-                  Minimal Standard · Native System Pointer
+                  Classic Modern Dark · Rounded Windows Cursor
                 </span>
                 {selectedCursor === 'default' && (
                   <span className="mt-2.5 text-[9px] px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30 font-distancia uppercase tracking-wider">

@@ -255,16 +255,23 @@ img {
     cursor: pointer;
   }
 
-  /* Default Mode: clean native OS pointer */
+  /* Classic Aero Black Mode: Windows Material Design Rounded Dark cursor (28x28) */
   html.cursor-default,
   html.cursor-default body,
   html.cursor-default * {
-    cursor: auto;
+    cursor: url('/cursors/pointer.png') 4 10, default;
   }
   html.cursor-default a,
   html.cursor-default button,
   html.cursor-default [role="button"],
-  html.cursor-default .cursor-pointer {
-    cursor: pointer;
+  html.cursor-default .cursor-pointer,
+  html.cursor-default select {
+    cursor: url('/cursors/link.png') 11 5, pointer !important;
+  }
+  html.cursor-default input[type="text"],
+  html.cursor-default input[type="email"],
+  html.cursor-default input[type="password"],
+  html.cursor-default textarea {
+    cursor: url('/cursors/beam.png') 13 14, text !important;
   }
 }

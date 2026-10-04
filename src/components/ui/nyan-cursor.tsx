@@ -17,8 +17,8 @@ export function NyanCursor() {
     if (!hasMouse) return;
 
     const COLORS = ['#ff0000', '#ff9900', '#ffff00', '#33ff00', '#0099ff', '#6633ff'];
-    const S = 3;              // pixel scale of the cat
-    const BAND = 5;           // rainbow band thickness
+    const S = 2;              // pixel scale of the cat (scaled compact)
+    const BAND = 3.5;         // rainbow band thickness
     const MAX_TRAIL = 40;     // trail length (points)
     const EASE = 0.22;        // follow smoothness (0-1)
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
